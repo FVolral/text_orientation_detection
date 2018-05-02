@@ -29,7 +29,7 @@ from __future__ import division
 import numpy as np
 import cv2 
 
-def getContours(img):
+def get_contours(img):
     """
     The MIT License (MIT)
 
@@ -67,32 +67,29 @@ def getContours(img):
 
     return contours
 
-def processContours(contours, img_w, img_h):
+def process_contours(contours, img_w, img_h):
     """
     Get the bounding rects of the contours and compute 
     the median ratio of rectangle. 
     """
     ratioWH = []
     area = img_w * img_h 
-    reject = 0
     for c  in contours:
         x, y, w, h = cv2.boundingRect(c)
         """
         area of rect should cover at least 0.05% of the image
         and ratio should be interesting enough by its distance
-        for a perfect squared ratio of 1:1
+        from a perfect squared ratio of 1:1
         """
         rect_area = w * h 
         ratio = w / h 
-        dist_of_square = abs(ratio - 1.0)
+        dist_from_square = abs(ratio - 1.0)
 
-        if rect_area > area * 0.0005 and dist_of_square > 0.3:
+        if rect_area > area * 0.0005 and dist_from_square > 0.3:
             ratioWH.append(w/h)
         else :
-            reject += 1
             continue
 
-    print reject
     if len(ratioWH) == 0:
         return 0
     
@@ -100,7 +97,7 @@ def processContours(contours, img_w, img_h):
 
     return med_ratio
 
-def needToBeRotated(img, img_name):
+def need_to_be_rotated(img, img_name):
     """
     Detect if an image that mainly contains text is arranged vertically or 
     horizontally, not in which sens it should be rotated though. It's DIY and 
@@ -137,11 +134,11 @@ def needToBeRotated(img, img_name):
     # Rotate and compare contours 
     rotated_img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
 
-    c1 = getContours(img)
-    med_ratio_a = processContours(c1, img_w, img_h)
+    c1 = get_contours(img)
+    med_ratio_a = process_contours(c1, img_w, img_h)
     
-    c2 = getContours(rotated_img)
-    med_ratio_b = processContours(c2, img_w, img_h)
+    c2 = get_contours(rotated_img)
+    med_ratio_b = process_contours(c2, img_w, img_h)
   
     return med_ratio_a < med_ratio_b
 
@@ -180,19 +177,20 @@ test_images = [
       ("test_images/text_test29.jpg", False)]
 
 
-WIN, FAIL = (0,0)
+if __name__ == "__main__":
+    WIN, FAIL = (0,0)
 
-for t in test_images:
-    img_name, should_be = t
-    img = cv2.imread( img_name )  
-    
-    print img_name,   
-    if needToBeRotated(img, img_name) == should_be:
-        WIN  += 1; print "SUCCESS !"
-    else:
-        FAIL += 1; print "FAILED  !"
+    for t in test_images:
+        img_name, should_be = t
+        img = cv2.imread( img_name )  
+        
+        print img_name,   
+        if need_to_be_rotated(img, img_name) == should_be:
+            WIN  += 1; print "SUCCESS !"
+        else:
+            FAIL += 1; print "FAILED  !"
 
-print WIN, "/", FAIL, " W/F"
+    print WIN, "/", FAIL, " W/F"
 
 
 
